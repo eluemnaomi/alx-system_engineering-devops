@@ -1,19 +1,32 @@
-
-rts to-do list information for a given employee ID to JSON format."""
+s script fetches todos from an API and writes them
+to a JSON file
+"""
 import json
 import requests
 import sys
 
 if __name__ == "__main__":
-    user_id = sys.argv[1]
-    url = "https://jsonplaceholder.typicode.com/"
-    user = requests.get(url + "users/{}".format(user_id)).json()
+    userId = sys.argv[1]
+    base_url = "https://jsonplaceholder.typicode.com"
+    user = requests.get(f"{base_url}/users/{userId}",
+                        timeout=10).json()
+    todos = requests.get(f"{base_url}/todos?userId={userId}",
+                         timeout=10).json()
     username = user.get("username")
-    todos = requests.get(url + "todos", params={"userId": user_id}).json()
 
-    with open("{}.json".format(user_id), "w") as jsonfile:
-        json.dump({user_id: [{
-                "task": t.get("title"),
-                "completed": t.get("completed"),
+    for todo in todos:
+        todo['username'] = username
+
+    data = {
+        userId: [
+            {
+                "task": todo.get("title"),
+                "completed": todo.get("completed"),
                 "username": username
-            } for t in todos]}, jsonfile)
+            }
+            for todo in todos
+        ]
+    }
+
+    with open(f"{userId}.json", "w", encoding="utf-8") as file:
+        file.write(json.dumps(data, indent=4))

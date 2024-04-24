@@ -1,18 +1,22 @@
-
-rts to-do list information for a given employee ID to CSV format."""
+s script fetches todos from an API and writes them
+to a csv file
+"""
 import csv
 import requests
 import sys
 
 if __name__ == "__main__":
-    user_id = sys.argv[1]
-    url = "https://jsonplaceholder.typicode.com/"
-    user = requests.get(url + "users/{}".format(user_id)).json()
+    userId = sys.argv[1]
+    base_url = "https://jsonplaceholder.typicode.com"
+    user = requests.get(f"{base_url}/users/{userId}",
+                        timeout=10).json()
+    todos = requests.get(f"{base_url}/todos?userId={userId}",
+                         timeout=10).json()
     username = user.get("username")
-    todos = requests.get(url + "todos", params={"userId": user_id}).json()
 
-    with open("{}.csv".format(user_id), "w", newline="") as csvfile:
-        writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
-        [writer.writerow(
-            [user_id, username, t.get("completed"), t.get("title")]
-         ) for t in todos]
+    with open(f"{userId}.csv", "w", encoding="utf-8") as file:
+        csv_writer = csv.writer(file, quoting=csv.QUOTE_ALL)
+
+        for todo in todos:
+            csv_writer.writerow([userId, username, todo.get("completed"),
+                                 todo.get("title")])

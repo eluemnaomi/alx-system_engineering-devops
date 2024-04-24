@@ -1,18 +1,32 @@
-
-rts to-do list information of all employees to JSON format."""
+s script fetches todos from an API and writes them
+to a JSON file
+"""
 import json
 import requests
 
 if __name__ == "__main__":
-    url = "https://jsonplaceholder.typicode.com/"
-    users = requests.get(url + "users").json()
+    base_url = "https://jsonplaceholder.typicode.com"
+    todos = requests.get(f"{base_url}/todos",
+                         timeout=10).json()
 
-    with open("todo_all_employees.json", "w") as jsonfile:
-        json.dump({
-            u.get("id"): [{
-                "task": t.get("title"),
-                "completed": t.get("completed"),
-                "username": u.get("username")
-            } for t in requests.get(url + "todos",
-                                    params={"userId": u.get("id")}).json()]
-            for u in users}, jsonfile)
+    userIds = [todo.get("userId") for todo in todos]
+
+    all_data = {}
+
+    for userId in userIds:
+        user = requests.get(f"{base_url}/users/{userId}", timeout=10).json()
+        userTodos = requests.get(f"{base_url}/todos?userId={userId}",
+                                 timeout=10).json()
+        data = [
+            {
+                "username": user.get("username"),
+                "task": todo.get("title"),
+                "completed": todo.get("completed")
+            }
+            for todo in userTodos
+        ]
+
+        all_data[userId] = data
+
+    with open("todo_all_employees.json", "w", encoding='utf-8') as file:
+        file.write(json.dumps(all_data, indent=4))
