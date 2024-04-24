@@ -1,4 +1,6 @@
-s script fetches todos from an API and writes them
+#!/usr/bin/python3
+"""
+This script fetches todos from an API and writes them
 to a JSON file
 """
 import json
